@@ -19,14 +19,14 @@ int main() {
 
   std::string input;
   std::cin >> input;
+  std::cout << '\n';
   Command command = inputToCommand(input);
 
   switch(command){
   case(Command::Input):
     break;
   case(Command::Error):
-    std::cout << '\n';
-    std::cout << input << " command not found";
+    std::cout << input << " command not found\n";
     break;
   }
 
