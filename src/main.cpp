@@ -2,11 +2,13 @@
 #include <string>
 enum class Command{
   Input,
+  Exit,
   Error
 };
 
 Command inputToCommand(std::string input){
-  if(input == "input") return Command::Input;
+       if(input == "input") return Command::Input;
+  else if(input == "exit")  return Command::Exit;
   else{return Command::Error; }
 }
 
@@ -25,6 +27,8 @@ int main() {
   switch(command){
   case(Command::Input):
     break;
+  case(Command::Exit):
+    return 0;
   case(Command::Error):
     std::cout << input << ": command not found\n";
     break;
