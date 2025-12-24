@@ -39,7 +39,7 @@ void executeCommand(CommandNode* cmd) {
 
     std::vector<char*> cstr_argv;
     for (auto& arg : argv) {
-        cstr_argv.push_back(arg.data());
+        cstr_argv.push_back(const_cast<char*>(arg.c_str()));
     }
     cstr_argv.push_back(nullptr);
 
