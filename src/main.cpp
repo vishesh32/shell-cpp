@@ -45,6 +45,7 @@ void Type(std::string args){
 
   if(builtin.count(command)){
     std::cout << command << " is a shell builtin\n";
+    return;
   }
   
   const char* path_env = std::getenv("PATH");
