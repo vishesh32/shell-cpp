@@ -1,21 +1,52 @@
 #include <iostream>
 #include <string>
-enum class Command{
-  Input,
-  Echo,
-  Exit,
-  Error
+#include <unordered_set>
+
+static const std::unordered_set<std::string> builtin = {
+    "echo",
+    "exit",
+    "type"
 };
 
-Command inputToCommand(std::string& input, std::string& args){
-  int command_idx =  input.find(" ");
-  std::string command = input.substr(0, command_idx);
-  args = input.substr(command_idx+1, input.size());
-  input = command;
+void Type(std::string args){
+  if(args.empty()){
+    std::cout << "type: missing argument\n";
+    return;
+  }
 
-  if(command == "input") return Command::Input;
-  else if(command == "exit")  return Command::Exit;
+  int command_idx =  args.find(" ");
+  std::string command;
+  if (command_idx == std::string::npos) command = args;
+  else command = args.substr(0, command_idx);
+
+  if(builtin.count(command)){
+    std::cout << command << " is a shell builtin\n";
+  }
+  else{
+    std::cout << command << ": not found\n";
+  }
+}
+
+enum class Command{
+  Echo,
+  Exit,
+  Error,
+  Type
+};
+
+Command inputToCommand(const std::string& input, std::string& command, std::string& args){
+  int command_idx =  input.find(" ");
+  if(command_idx == std::string::npos){
+    command = input;
+    args.clear();
+  }else{
+    command = input.substr(0, command_idx);
+    args = input.substr(command_idx+1, input.size());
+  }
+
+  if(command == "exit")  return Command::Exit;
   else if(command == "echo")  return Command::Echo;
+  else if(command == "type")  return Command::Type;
   else{return Command::Error; }
 }
 
@@ -27,20 +58,21 @@ int main() {
   while(true){
   std::cout << "$ ";
 
-  std::string input, args;
+  std::string input, command, args;
   std::getline(std::cin, input);
-  Command command = inputToCommand(input, args); // input now contains command as a string, everything after the command as args.
+  Command _command = inputToCommand(input, command, args); // input now contains command as a string, everything after the command as args.
 
-  switch(command){
-  case(Command::Input):
-    break;
+  switch(_command){
   case(Command::Echo):
     std::cout << args << std::endl;
     break;
   case(Command::Exit):
     return 0;
   case(Command::Error):
-    std::cout << input << ": command not found\n";
+    std::cout << command << ": command not found\n";
+    break;
+  case(Command::Type):
+    Type(args);
     break;
   }
   }
