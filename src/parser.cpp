@@ -26,7 +26,7 @@ std::unique_ptr<ASTNode> parseCommand(const std::vector<Token>& tokens, size_t& 
         static_cast<CommandNode*>(node.get())->args.push_back(tokens[index].value);
         index++;
         }
-        return cmd;
+        return node;
     }
     else{
         //handle error
