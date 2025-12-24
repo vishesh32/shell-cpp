@@ -30,6 +30,17 @@ std::vector<Token> tokenize(const std::string& input){
             Tokens.push_back(Token{TokenType::RedirectStdOut, ">"});
             i++;
             continue;
+        } else if(input[i] == '\'' || input[i] == '\"'){ // quoted string
+            char quote = input[i];
+            i++; // skip opening quote
+            std::string word;
+            while(i < input.size() && input[i] != quote){
+                word += input[i];
+                i++;
+            }
+            if(i < input.size()) i++; // skip closing quote
+            Tokens.push_back(Token{TokenType::Word, word});
+            continue;
         }//otherwise should be a word
         std::string word;
         while(i < input.size()){
