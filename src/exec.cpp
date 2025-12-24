@@ -48,7 +48,7 @@ void executeCommand(CommandNode* cmd) {
     if (pid == 0) {
         // Child process
         execvp(cstr_argv[0], cstr_argv.data());
-        perror("execvp failed");
+        std::cout << cstr_argv[0] << ": command not found" << std::endl;
         exit(1);
     } else if (pid > 0) {
         // Parent process
