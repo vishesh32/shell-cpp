@@ -1,6 +1,11 @@
 #include <iostream>
 #include <string>
 #include <unordered_set>
+#include <cstdlib>   // getenv
+#include <unistd.h>  // access
+#include <sys/stat.h>
+#include <vector>
+
 
 static const std::unordered_set<std::string> builtin = {
     "echo",
@@ -8,6 +13,25 @@ static const std::unordered_set<std::string> builtin = {
     "type"
 };
 
+/// PATH = dir1:/dir2:/dir3
+/// PATH="/usr/bin:/usr/local/bin:$PATH"
+std::vector<std::string> splitPath(std::string path){
+  std::vector<std::string> dir;
+
+  size_t start = 0;
+
+  while(true){
+    size_t end = path.find(':', start);
+    if(end == std::string::npos){
+      dir.push_back(path.substr(start));
+      break;
+    }
+    dir.push_back(path.substr(start, end - start));
+    start = end + 1;
+  }
+
+  return dir;
+}
 void Type(std::string args){
   if(args.empty()){
     std::cout << "type: missing argument\n";
@@ -22,9 +46,28 @@ void Type(std::string args){
   if(builtin.count(command)){
     std::cout << command << " is a shell builtin\n";
   }
-  else{
-    std::cout << command << ": not found\n";
-  }
+  
+  const char* path_env = std::getenv("PATH");
+    if (!path_env) {
+        std::cout << command << ": not found\n";
+        return;
+    }
+
+    std::string path_str = path_env;
+
+    std::vector<std::string> paths = splitPath(path_str);
+
+    for(auto path : paths){
+      std::string full_path = path + "/" + command;
+
+      //returns 0 if X_OK is allowed - is an executable
+      if(!access(full_path.c_str(), X_OK)){
+          std::cout << command << " is " << full_path << std::endl;
+          return;
+      } 
+    }
+    std::cout << command << ": not found\n"; 
+    return;
 }
 
 enum class Command{
