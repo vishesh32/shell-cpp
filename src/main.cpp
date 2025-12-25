@@ -154,6 +154,7 @@ int main() {
 
         if(full_path){
           std::vector<std::string> arg_list = buildArgList(args);
+          arg_list.insert(arg_list.begin(), command);
           std::vector<char*> argv = buildArgV(arg_list);
           execv(full_path->c_str(), argv.data());
           //std::cout << command << " is " << *full_path << std::endl;
