@@ -2,10 +2,11 @@
 #include <string>
 #include <unordered_set>
 #include <cstdlib>   // getenv
-#include <unistd.h>  // access
+#include <unistd.h>  // access, fork, execv
 #include <sys/stat.h>
 #include <vector>
 #include <optional>
+#include <sys/wait.h> // waitpid
 
 static const std::unordered_set<std::string> builtin = {
     "echo",
@@ -156,7 +157,14 @@ int main() {
           std::vector<std::string> arg_list = buildArgList(args);
           arg_list.insert(arg_list.begin(), command);
           std::vector<char*> argv = buildArgV(arg_list);
-          execv(full_path->c_str(), argv.data());
+
+          pid_t pid = fork();
+          if(pid == 0){ // child process
+            execv(full_path->c_str(), argv.data());
+          }else{
+            int status;
+            waitpid(pid, &status, 0); // wait for child to finish
+          }
           //std::cout << command << " is " << *full_path << std::endl;
         }
         else{
