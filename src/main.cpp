@@ -5,7 +5,7 @@
 #include <unistd.h>  // access
 #include <sys/stat.h>
 #include <vector>
-
+#include <optional>
 
 static const std::unordered_set<std::string> builtin = {
     "echo",
@@ -32,13 +32,63 @@ std::vector<std::string> splitPath(std::string path){
 
   return dir;
 }
+
+std::vector<std::string> buildArgList(const std::string& args_str) {
+  std::vector<std::string> list;
+
+  size_t it = 0;
+  while(it < args_str.size()){
+    while (it < args_str.size() && args_str[it] == ' ') it++;
+
+    size_t space_idx = args_str.find(' ', it);
+    if(space_idx == std::string::npos){
+      list.push_back(args_str.substr(it));
+      break;
+    }
+    list.push_back(args_str.substr(it, space_idx - it));
+    it = space_idx + 1;
+  }
+  return list;
+}
+
+std::vector<char*> buildArgV(std::vector<std::string>& args) {
+    std::vector<char*> argv;
+  argv.reserve(args.size() + 1);
+    for (auto& arg : args) {
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    argv.push_back(nullptr);
+    return argv;
+}
+std::optional<std::string> findExecutableInPath(std::string& name){
+  
+  const char* path_env = std::getenv("PATH");
+    if (!path_env) {
+        return std::nullopt;
+    }
+
+    std::string path_str = path_env;
+    std::vector<std::string> paths = splitPath(path_str);
+
+    for(auto path : paths){
+      std::string full_path = path + "/" + name;
+
+      //returns 0 if X_OK is allowed - is an executable
+      if(!access(full_path.c_str(), X_OK)){
+          return full_path;
+      } 
+    }
+    return std::nullopt;
+}
+
+// input: (type) command arg1 arg2 argx
 void Type(std::string args){
   if(args.empty()){
     std::cout << "type: missing argument\n";
     return;
   }
 
-  int command_idx =  args.find(" ");
+  size_t command_idx =  args.find(' ');
   std::string command;
   if (command_idx == std::string::npos) command = args;
   else command = args.substr(0, command_idx);
@@ -48,38 +98,26 @@ void Type(std::string args){
     return;
   }
   
-  const char* path_env = std::getenv("PATH");
-    if (!path_env) {
-        std::cout << command << ": not found\n";
-        return;
-    }
+  //otherwise isnt builtin -> search the path directories
+  std::optional<std::string> full_path = findExecutableInPath(command);
 
-    std::string path_str = path_env;
-
-    std::vector<std::string> paths = splitPath(path_str);
-
-    for(auto path : paths){
-      std::string full_path = path + "/" + command;
-
-      //returns 0 if X_OK is allowed - is an executable
-      if(!access(full_path.c_str(), X_OK)){
-          std::cout << command << " is " << full_path << std::endl;
-          return;
-      } 
-    }
+  if(full_path){
+    std::cout << command << " is " << *full_path << std::endl;
+  }
+  else{
     std::cout << command << ": not found\n"; 
-    return;
+  }
 }
 
 enum class Command{
   Echo,
   Exit,
-  Error,
+  Default,
   Type
 };
 
 Command inputToCommand(const std::string& input, std::string& command, std::string& args){
-  int command_idx =  input.find(" ");
+  size_t command_idx =  input.find(' ');
   if(command_idx == std::string::npos){
     command = input;
     args.clear();
@@ -91,7 +129,7 @@ Command inputToCommand(const std::string& input, std::string& command, std::stri
   if(command == "exit")  return Command::Exit;
   else if(command == "echo")  return Command::Echo;
   else if(command == "type")  return Command::Type;
-  else{return Command::Error; }
+  else{return Command::Default; }
 }
 
 int main() {
@@ -104,17 +142,32 @@ int main() {
 
   std::string input, command, args;
   std::getline(std::cin, input);
-  Command _command = inputToCommand(input, command, args); // input now contains command as a string, everything after the command as args.
+  Command _command = inputToCommand(input, command, args); 
 
   switch(_command){
-  case(Command::Echo):
+
+
+  case(Command::Default):
+    if(!builtin.count(command)){
+      //search if in directories, then execute
+      std::optional<std::string> full_path = findExecutableInPath(command);
+
+        if(full_path){
+          std::vector<std::string> arg_list = buildArgList(args);
+          std::vector<char*> argv = buildArgV(arg_list);
+          execv(full_path->c_str(), argv.data());
+          //std::cout << command << " is " << *full_path << std::endl;
+        }
+        else{
+          std::cout << command << ": command not found\n"; 
+        }
+    }
+    break;
+   case(Command::Echo):
     std::cout << args << std::endl;
     break;
   case(Command::Exit):
     return 0;
-  case(Command::Error):
-    std::cout << command << ": command not found\n";
-    break;
   case(Command::Type):
     Type(args);
     break;
