@@ -60,44 +60,54 @@ void executeCommand(CommandNode* cmd) {
 }
 
 void executeRedirect(RedirectNode* redirect) {
-    // 1. Fork so redirection does NOT affect the parent shell
+    if (!redirect || !redirect->child) return;
+
+    // Fork so the redirection only affects the child, not the parent shell
     pid_t pid = fork();
     if (pid < 0) {
         perror("fork");
         return;
     } else if (pid == 0) {
         // ===== CHILD PROCESS =====
-        // 2. Open (or create) the output file
-        // O_TRUNC ensures > overwrites the file
+
+        // 1. Open (or create) the output file
+        // O_TRUNC ensures '>' overwrites existing files
         int fd = open(
             redirect->outfile.c_str(),
-            O_CREAT | O_WRONLY | O_TRUNC, 0644 );
+            O_CREAT | O_WRONLY | O_TRUNC,
+            0644
+        );
         if (fd < 0) {
             perror("open");
-            _exit(1); // Do NOT return to shell loop
+            _exit(1);  // exit child process immediately
         }
 
-        // 3. Redirect stdout (fd 1) to the file
+        // 2. Redirect stdout to the file
         if (dup2(fd, STDOUT_FILENO) < 0) {
             perror("dup2");
             close(fd);
             _exit(1);
         }
 
-        // fd is no longer needed after dup2
+        // 3. Close the original file descriptor; it's no longer needed
         close(fd);
 
+        // 4. Execute the child command (could be another CommandNode or nested AST)
         execute(redirect->child.get());
 
-        // Ensure child never falls back into shell loop
+        // 5. Exit child; prevent it from returning to shell loop
         _exit(0);
     }
 
     // ===== PARENT PROCESS =====
-
-    // 6. Wait for the redirected command to finish
+    // Wait for the child process to finish
     int status;
     waitpid(pid, &status, 0);
+
+    // Optional: check exit status
+    if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+        std::cerr << "Child process exited with code " << WEXITSTATUS(status) << "\n";
+    }
 }
 
 
