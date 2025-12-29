@@ -27,7 +27,7 @@ void execute(ASTNode* ast) {
 
 void executeCommand(CommandNode* cmd) {
 
-    if (isBuiltIn(cmd->command_name)) {
+    if (isBuiltin(cmd->command_name)) {
         runBuiltin(cmd->command_name, cmd->args);
         return;
     }
