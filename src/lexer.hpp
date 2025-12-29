@@ -1,0 +1,18 @@
+#pragma once
+#include <string>
+#include <vector>
+
+enum class TokenType {
+    Word,        // normal words / arguments
+    Pipe,        // |
+    RedirectStdOut, // >
+    RedirectIn,  // <
+    EndOfLine    // optional, marks end
+};
+
+struct Token {
+    TokenType type;
+    std::string value;
+};
+
+std::vector<Token> tokenize(const std::string& input);

@@ -5,20 +5,23 @@ static const std::unordered_set<std::string> builtin = {
     "echo", "exit", "type"
 };
 
-bool isBuiltin(const Command& cmd) {
-    return builtin.count(cmd.name);
+bool isBuiltin(const std::string& command_name) {
+    return builtin.count(command_name);
 }
 
-void runBuiltin(const Command& cmd) {
-    if (cmd.type == CommandType::Echo) {
-        for (size_t i = 0; i < cmd.args.size(); i++) {
-            if (i) std::cout << " ";
-            std::cout << cmd.args[i];
+void runBuiltin(const std::string& command_name, const std::vector<std::string>& args){
+    if(command_name == "echo"){
+        for(size_t i= 0; i < args.size(); i++){
+            if(i) std::cout << " ";
+            std::cout << args[i];
         }
-        std::cout << "\n";
-    }
-    else if (cmd.type == CommandType::Type) {
-        runType(cmd.args.empty() ? "" : cmd.args[0]);
+        std::cout << std::endl;
+    } else if (command_name == "type"){
+        runType(args.empty() ? "" : args[0]);
+    } else if (command_name == "exit"){
+        exit(0);
+    } else {
+        std::cout << "Unknown builtin command: " << command_name << "\n";
     }
 }
 
@@ -33,11 +36,7 @@ void runType(const std::string& args) {
         ? args
         : args.substr(0, idx);
 
-    static const std::unordered_set<std::string> builtin = {
-        "echo", "exit", "type"
-    };
-
-    if (builtin.count(cmd)) {
+    if (isBuiltin(cmd)) {
         std::cout << cmd << " is a shell builtin\n";
         return;
     }
