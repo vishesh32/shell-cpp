@@ -6,6 +6,7 @@
 #include "parse.hpp"
 #include <sys/wait.h> // waitpid
 #include <cassert>
+#include "parser.hpp"
 
 void execute(ASTNode* ast);
 
