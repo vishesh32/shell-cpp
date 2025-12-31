@@ -64,10 +64,12 @@ void LineEditor::handleAutocomplete(std::string& buffer) {
         std::string suffix = matches[0].substr(buffer.size());
         buffer += suffix;
         std::cout << suffix;
+        buffer += ' '; //trailing space after autocomplete
+        std::cout << ' ';
         std::cout.flush();
     } else if (!matches.empty()) {
         std::cout << "\n";
-        for (auto& m : matches) std::cout << m << "  ";
+        for (auto& m : matches) std::cout << m << "  "; //list matches
         std::cout << "\n$ " << buffer;
         std::cout.flush();
     }
