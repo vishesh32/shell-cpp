@@ -23,6 +23,10 @@ std::unique_ptr<ASTNode> parseCommand(const std::vector<Token>& tokens, size_t& 
                 node = parseRedirection(std::move(node), tokens, index);
                 break;
             }
+            if(tokens[index].type == TokenType::RedirectStdErr){
+                 node = parseRedirection(std::move(node), tokens, index);
+                break;               
+            }
         static_cast<CommandNode*>(node.get())->args.push_back(tokens[index].value);
         index++;
         }
@@ -49,8 +53,19 @@ std::unique_ptr<ASTNode> parseRedirection(std::unique_ptr<ASTNode> lhs, const st
 
     return redirectNode;
     }
-    //To Do StdErr redirect
-    else{ return nullptr; }
+    else if(tokens[index].type == TokenType::RedirectStdErr){
+        auto redirectNode = std::make_unique<RedirectNode>();
+        redirectNode->type = ASTNodeType::Redirect;
+        redirectNode->redirect_type = RedirectType::StdErr;
+        redirectNode->child = std::move(lhs);
+
+        index++; //consume '2>'
+        redirectNode->outfile = tokens[index].value;
+        index++;
+
+        return redirectNode;
+    //else handle error 
+    } else { return nullptr; }
 }
 
 

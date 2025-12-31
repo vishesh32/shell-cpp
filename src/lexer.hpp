@@ -5,8 +5,8 @@
 enum class TokenType {
     Word,        // normal words / arguments
     Pipe,        // |
-    RedirectStdOut, // >
-    RedirectIn,  // <
+    RedirectStdOut, // >, 1>
+    RedirectStdErr,  // 2>
     EndOfLine    // optional, marks end
 };
 

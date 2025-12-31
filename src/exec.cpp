@@ -60,30 +60,34 @@ void executeCommand(CommandNode* cmd) {
 }
 
 void executeRedirect(RedirectNode* redirect) {
+    int target_fd;
+    switch (redirect->redirect_type) {
+    case RedirectType::StdOut:
+        target_fd = STDOUT_FILENO;
+        break;
+    case RedirectType::StdErr:
+        target_fd = STDERR_FILENO;
+        break;
+    }
+
     if (!redirect || !redirect->child) return;
 
-    // Fork so the redirection only affects the child, not the parent shell
     pid_t pid = fork();
     if (pid < 0) {
-        perror("fork");
+        perror("fork failed");
         return;
     } else if (pid == 0) {
         // ===== CHILD PROCESS =====
-
-        // 1. Open (or create) the output file
-        // O_TRUNC ensures '>' overwrites existing files
+        // 1. Open (or create) the output file O_TRUNC ensures '>' overwrites existing files
         int fd = open(
-            redirect->outfile.c_str(),
-            O_CREAT | O_WRONLY | O_TRUNC,
-            0644
-        );
+            redirect->outfile.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         if (fd < 0) {
-            perror("open");
+            perror("file open error");
             _exit(1);  // exit child process immediately
         }
 
-        // 2. Redirect stdout to the file
-        if (dup2(fd, STDOUT_FILENO) < 0) {
+        // 2. Redirect stdout/stderr to the file
+        if (dup2(fd, target_fd) < 0) {
             perror("dup2");
             close(fd);
             _exit(1);
@@ -91,10 +95,8 @@ void executeRedirect(RedirectNode* redirect) {
 
         // 3. Close the original file descriptor; it's no longer needed
         close(fd);
-
         // 4. Execute the child command (could be another CommandNode or nested AST)
         execute(redirect->child.get());
-
         // 5. Exit child; prevent it from returning to shell loop
         _exit(0);
     }
@@ -107,7 +109,7 @@ void executeRedirect(RedirectNode* redirect) {
     // Optional: check exit status
     if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
         std::cerr << "Child process exited with code " << WEXITSTATUS(status) << "\n";
-    }
+    }else { return; }
 }
 
 
