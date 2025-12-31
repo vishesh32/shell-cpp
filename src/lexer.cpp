@@ -12,7 +12,7 @@ std::vector<Token> tokenize(const std::string& input){
             continue;
         } else if(input[i] == '1' && i != input.size()-2 && input[i+1] == '>' && input[i+2] == '>'&& (i == 0 || input[i - 1] == ' ')){//1>>
             Tokens.push_back(Token{TokenType::AppendStdOut, "1>>"});
-            i + i + 3;
+            i = i + 3;
             continue;
         } else if(input[i] == '2' && i != input.size()-2 && input[i+1] == '>' && input[i+2] == '>'&& (i == 0 || input[i - 1] == ' ')){//2>>
             Tokens.push_back(Token{TokenType::AppendStdErr, "2>>"});

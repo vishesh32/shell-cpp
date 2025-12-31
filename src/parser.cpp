@@ -94,6 +94,9 @@ std::unique_ptr<ASTNode> parseRedirection(std::unique_ptr<ASTNode> lhs, const st
         index++;
 
         return redirectNode;
+    } else {
+        // Not a redirection token
+        return nullptr;
     }
 }
 
