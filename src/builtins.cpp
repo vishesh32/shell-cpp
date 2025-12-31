@@ -1,7 +1,7 @@
 #include "builtins.hpp"
 
 
-static const std::unordered_set<std::string> builtin = {
+const std::unordered_set<std::string> builtin = {
     "echo", "exit", "type"
 };
 
