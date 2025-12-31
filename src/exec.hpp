@@ -18,3 +18,5 @@ void executeCommand(CommandNode* cmd);
 void executeRedirect(RedirectNode* redirect);
 
 void executePipeline(PipelineNode* pipe);
+
+void execCommandNoFork(CommandNode* cmd);

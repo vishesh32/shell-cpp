@@ -59,6 +59,29 @@ void executeCommand(CommandNode* cmd) {
     }
 }
 
+void execCommandNoFork(CommandNode* cmd) {
+    if (isBuiltin(cmd->command_name)) {
+        runBuiltin(cmd->command_name, cmd->args);
+        exit(0); // Exit after running builtin in child process returns
+    }
+    
+    std::vector<std::string> argv;
+    argv.reserve(cmd->args.size()+1);
+    argv.push_back(cmd->command_name);
+    argv.insert(argv.end(), cmd->args.begin(), cmd->args.end());
+
+    std::vector<char*> cstr_argv;
+    for (auto& arg : argv) {
+        cstr_argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    cstr_argv.push_back(nullptr);
+
+    execvp(cstr_argv[0], cstr_argv.data());
+    //exec only returns on failure
+    std::cout << cstr_argv[0] << ": command not found" << std::endl;
+    exit(1);
+}
+
 void executeRedirect(RedirectNode* redirect) {
     int target_fd;
     switch (redirect->redirect_type) {
@@ -94,7 +117,10 @@ void executeRedirect(RedirectNode* redirect) {
         // 3. Close the original file descriptor; it's no longer needed
         close(fd);
         // 4. Execute the child command (could be another CommandNode or nested AST)
-        execute(redirect->child.get());
+        if (redirect->child->type == ASTNodeType::Command) {
+            execCommandNoFork(static_cast<CommandNode*>(redirect->child.get()));
+        }
+
         // 5. Exit child; prevent it from returning to shell loop
         _exit(0);
     }
