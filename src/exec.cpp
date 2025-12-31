@@ -84,13 +84,27 @@ void execCommandNoFork(CommandNode* cmd) {
 
 void executeRedirect(RedirectNode* redirect) {
     int target_fd;
+    int open_flags = O_CREAT | O_WRONLY;
+
     switch (redirect->redirect_type) {
     case RedirectType::StdOut:
         target_fd = STDOUT_FILENO;
+         open_flags |= O_TRUNC;
         break;
     case RedirectType::StdErr:
         target_fd = STDERR_FILENO;
+        open_flags |= O_TRUNC;
         break;
+    case RedirectType::AppendStdOut:
+        target_fd = STDOUT_FILENO;
+        open_flags |= O_APPEND;    
+        break;
+    case RedirectType::AppendStdErr:
+        target_fd = STDERR_FILENO;
+        open_flags |= O_APPEND;
+        break;
+    default:
+        return; // Unsupported redirect type
     }
 
     if (!redirect || !redirect->child) return;
@@ -102,7 +116,7 @@ void executeRedirect(RedirectNode* redirect) {
     } else if (pid == 0) {
         // ===== CHILD PROCESS =====
         // 1. Open (or create) the output file O_TRUNC ensures '>' overwrites existing files
-        int fd = open(redirect->outfile.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(redirect->outfile.c_str(), open_flags, 0644);
         if (fd < 0) {
             _exit(1);  // exit child process immediately, file open error
         }

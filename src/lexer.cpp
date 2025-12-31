@@ -10,11 +10,23 @@ std::vector<Token> tokenize(const std::string& input){
         if(input[i] == ' '){
             i++;
             continue;
+        } else if(input[i] == '1' && i != input.size()-2 && input[i+1] == '>' && input[i+2] == '>'&& (i == 0 || input[i - 1] == ' ')){//1>>
+            Tokens.push_back(Token{TokenType::AppendStdOut, "1>>"});
+            i + i + 3;
+            continue;
+        } else if(input[i] == '2' && i != input.size()-2 && input[i+1] == '>' && input[i+2] == '>'&& (i == 0 || input[i - 1] == ' ')){//2>>
+            Tokens.push_back(Token{TokenType::AppendStdErr, "2>>"});
+            i = i + 3;
+            continue;
+        } else if(input[i] == '>' && i != input.size()-1 && input[i+1] == '>'&& (i == 0 || input[i - 1] == ' ')){//>>
+            Tokens.push_back(Token{TokenType::AppendStdOut, ">>"});
+            i = i + 2;
+            continue;
         } else if(input[i] == '1' && i != input.size() - 1 && input[i+1] == '>' && (i == 0 || input[i - 1] == ' ')){ //stdout is 1>
             Tokens.push_back(Token{TokenType::RedirectStdOut, ">"});
             i = i + 2;
             continue;
-        } else if(input[i] == '2' && i != input.size() - 1 && input[i+1] == '>' && (i == 0 || input[i - 1] == ' ')){
+        } else if(input[i] == '2' && i != input.size() - 1 && input[i+1] == '>' && (i == 0 || input[i - 1] == ' ')){ //2>
             Tokens.push_back(Token{TokenType::RedirectStdErr, "2>"});
             i = i + 2;
             continue;

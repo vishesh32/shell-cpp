@@ -27,6 +27,15 @@ std::unique_ptr<ASTNode> parseCommand(const std::vector<Token>& tokens, size_t& 
                  node = parseRedirection(std::move(node), tokens, index);
                 break;               
             }
+            if(tokens[index].type == TokenType::AppendStdOut){
+                 node = parseRedirection(std::move(node), tokens, index);
+                break;               
+            }
+            if(tokens[index].type == TokenType::AppendStdErr){
+                 node = parseRedirection(std::move(node), tokens, index);
+                break;               
+            }
+
         static_cast<CommandNode*>(node.get())->args.push_back(tokens[index].value);
         index++;
         }
@@ -39,7 +48,6 @@ std::unique_ptr<ASTNode> parseCommand(const std::vector<Token>& tokens, size_t& 
 }
 
 
-// Optional helper: parse redirection
 std::unique_ptr<ASTNode> parseRedirection(std::unique_ptr<ASTNode> lhs, const std::vector<Token>& tokens, size_t& index){
     if (tokens[index].type == TokenType::RedirectStdOut){
     auto redirectNode = std::make_unique<RedirectNode>();
@@ -64,8 +72,29 @@ std::unique_ptr<ASTNode> parseRedirection(std::unique_ptr<ASTNode> lhs, const st
         index++;
 
         return redirectNode;
-    //else handle error 
-    } else { return nullptr; }
+    } else if(tokens[index].type == TokenType::AppendStdOut){
+        auto redirectNode = std::make_unique<RedirectNode>();
+        redirectNode->type = ASTNodeType::Redirect;
+        redirectNode->redirect_type = RedirectType::AppendStdOut;
+        redirectNode->child = std::move(lhs);
+
+        index++; //consume '>>'
+        redirectNode->outfile = tokens[index].value;
+        index++;
+
+        return redirectNode;
+    } else if(tokens[index].type == TokenType::AppendStdErr){
+        auto redirectNode = std::make_unique<RedirectNode>();
+        redirectNode->type = ASTNodeType::Redirect;
+        redirectNode->redirect_type = RedirectType::AppendStdErr;
+        redirectNode->child = std::move(lhs);
+
+        index++; //consume '2>>'
+        redirectNode->outfile = tokens[index].value;
+        index++;
+
+        return redirectNode;
+    }
 }
 
 

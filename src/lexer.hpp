@@ -7,6 +7,8 @@ enum class TokenType {
     Pipe,        // |
     RedirectStdOut, // >, 1>
     RedirectStdErr,  // 2>
+    AppendStdOut,  // >>, 1>>
+    AppendStdErr,  // 2>>
     EndOfLine    // optional, marks end
 };
 

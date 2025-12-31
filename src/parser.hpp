@@ -28,7 +28,9 @@ struct CommandNode : ASTNode {
 
 enum class RedirectType{
     StdOut,
-    StdErr
+    StdErr,
+    AppendStdOut,
+    AppendStdErr
 };
 
 struct RedirectNode : ASTNode {
