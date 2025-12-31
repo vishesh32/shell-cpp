@@ -72,5 +72,10 @@ void LineEditor::handleAutocomplete(std::string& buffer) {
         for (auto& m : matches) std::cout << m << "  "; //list matches
         std::cout << "\n$ " << buffer;
         std::cout.flush();
+    } else if (matches.empty()) {
+        // No matches, ring bell
+        buffer += '\a';
+        std::cout << '\a';
+        std::cout.flush();
     }
 }
