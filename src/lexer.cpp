@@ -1,18 +1,6 @@
 #include "lexer.hpp"
 #include <cctype>
 
-// enum class TokenType {
-//     Word,        // normal words / arguments
-//     Pipe,        // |
-//     RedirectStdOut, // > / 1>
-//     RedirectIn,  // <
-//     EndOfLine    // optional, marks end
-// };
-
-// struct Token {
-//     TokenType type;
-//     std::string value;
-// };
 
 //take input string and turn into tokens e.g echo xxx>output.txt
 std::vector<Token> tokenize(const std::string& input){
@@ -29,6 +17,7 @@ std::vector<Token> tokenize(const std::string& input){
         } else if(input[i] == '2' && i != input.size() - 1 && input[i+1] == '>' && (i == 0 || input[i - 1] == ' ')){
             Tokens.push_back(Token{TokenType::RedirectStdErr, "2>"});
             i = i + 2;
+            continue;
         } else if(input[i] == '>'){ //stdout is >
             Tokens.push_back(Token{TokenType::RedirectStdOut, ">"});
             i++;
