@@ -79,11 +79,9 @@ void executeRedirect(RedirectNode* redirect) {
     } else if (pid == 0) {
         // ===== CHILD PROCESS =====
         // 1. Open (or create) the output file O_TRUNC ensures '>' overwrites existing files
-        int fd = open(
-            redirect->outfile.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+        int fd = open(redirect->outfile.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
         if (fd < 0) {
-            perror("file open error");
-            _exit(1);  // exit child process immediately
+            _exit(1);  // exit child process immediately, file open error
         }
 
         // 2. Redirect stdout/stderr to the file
@@ -103,13 +101,9 @@ void executeRedirect(RedirectNode* redirect) {
 
     // ===== PARENT PROCESS =====
     // Wait for the child process to finish
-    int status;
+    int status; // unused variable, used to debug errors but shells need to fail silently unless asked otherwise
     waitpid(pid, &status, 0);
 
-    // Optional: check exit status
-    if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-        std::cerr << "Child process exited with code " << WEXITSTATUS(status) << "\n";
-    }else { return; }
 }
 
 
