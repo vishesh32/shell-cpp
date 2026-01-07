@@ -23,6 +23,7 @@ private:
     static std::string last_autocomplete_buffer;
     static std::vector<std::string> last_autocomplete_matches;
     static bool tabWasLastPress;
+    static int autocomplete_index;
 
     // Terminal original settings
     static struct termios orig_termios;

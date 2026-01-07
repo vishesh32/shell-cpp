@@ -5,6 +5,7 @@ struct termios LineEditor::orig_termios;
 std::string LineEditor::last_autocomplete_buffer = "";
 std::vector<std::string> LineEditor::last_autocomplete_matches;
 bool LineEditor::tabWasLastPress = false;
+int LineEditor::autocomplete_index = 0;
 
 void LineEditor::enableRawMode() {
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) perror("tcgetattr");
@@ -30,6 +31,7 @@ std::string LineEditor::readLine() {
         if (c == '\n') {
             tabWasLastPress = false;
             last_autocomplete_buffer.clear();
+            autocomplete_index = 0;
             std::cout << "\n";
             break;
         } else if (c == '\t') {
@@ -37,6 +39,7 @@ std::string LineEditor::readLine() {
         } else if (c == 127) { // backspace
             tabWasLastPress = false;
             last_autocomplete_buffer.clear();
+            autocomplete_index = 0;
             if (!buffer.empty()) {
                 buffer.pop_back();
                 std::cout << "\b \b";
@@ -45,6 +48,7 @@ std::string LineEditor::readLine() {
         } else {
             tabWasLastPress = false;
             last_autocomplete_buffer.clear();
+            autocomplete_index = 0;
             buffer.push_back(c);
             std::cout << c;
             std::cout.flush();
@@ -65,6 +69,7 @@ void LineEditor::handleAutocomplete(std::string &buffer) {
     } else {
         last_autocomplete_buffer = buffer;
         last_autocomplete_matches.clear();
+        autocomplete_index = 0;
 
         for (const auto &cmd : builtin) {
             if (cmd.compare(0, buffer.size(), buffer) == 0)
@@ -90,15 +95,11 @@ void LineEditor::handleAutocomplete(std::string &buffer) {
     // Handle tab 
     if (last_autocomplete_matches.size() > 1) {
         if (!tabWasLastPress) {
-            static int count = 0;
-            // First tab (rings bell) autocompletes with lcp
-            std::string lcp = last_autocomplete_matches[count];
-            if(count == last_autocomplete_matches.size() - 1){
-                count = 0;
-            } else {
-                count++;
-            }
-            std::string suffix = lcp.substr(buffer.size());
+            // First tab autocompletes with current match from cycle
+            std::string match = last_autocomplete_matches[autocomplete_index];
+            autocomplete_index = (autocomplete_index + 1) % last_autocomplete_matches.size();
+            
+            std::string suffix = match.substr(buffer.size());
             buffer += suffix;
             std::cout << suffix;
             std::cout.flush();
