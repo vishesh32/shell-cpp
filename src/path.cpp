@@ -40,3 +40,30 @@ std::optional<std::string> findExecutableInPath(const std::string& name){
     }
     return std::nullopt;
 }
+
+std::optional<std::vector<std::string>> listExecutablesInPath(){
+    const char* path_env = std::getenv("PATH");
+    if (!path_env) {
+        return std::nullopt;
+    }
+
+    std::string path_str = path_env;
+    std::vector<std::string> paths = splitPath(path_str);
+    std::vector<std::string> executables;
+
+    for(auto path : paths){
+        DIR* dir = opendir(path.c_str()); 
+        if (dir) {
+            struct dirent* entry;
+            while ((entry = readdir(dir)) != nullptr) {
+                std::string full_path = path + "/" + entry->d_name;
+                if (access(full_path.c_str(), X_OK) == 0) {
+                    executables.push_back(entry->d_name);
+                }
+            }
+            closedir(dir);
+        }
+    }
+
+    return executables;
+}

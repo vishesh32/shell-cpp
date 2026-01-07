@@ -54,26 +54,46 @@ void LineEditor::handleAutocomplete(std::string& buffer) {
     // Only complete first word (command)
     if (buffer.find(' ') != std::string::npos) return;
 
-    std::vector<std::string> matches;
-    for (auto& cmd : builtin) {  // fixed variable name
+    std::vector<std::string> inbuilt_matches;
+    for (const auto &cmd : builtin) {  // fixed variable name
         if (cmd.compare(0, buffer.size(), buffer) == 0)
-            matches.push_back(cmd);
+            inbuilt_matches.push_back(cmd);
     }
 
-    if (matches.size() == 1) {
-        std::string suffix = matches[0].substr(buffer.size());
+    auto path_executables = listExecutablesInPath();
+    std::vector<std::string> path_matches;
+    if (path_executables.has_value()) {
+        const auto &executables = path_executables.value();
+        for (const auto &exe : executables) {
+            if (exe.compare(0, buffer.size(), buffer) == 0) {
+                path_matches.push_back(exe);
+            }
+        }
+    }
+    
+    std::vector<std::string> all_matches;
+    all_matches.reserve(inbuilt_matches.size() + path_matches.size());
+    all_matches.insert(all_matches.end(), inbuilt_matches.begin(), inbuilt_matches.end());
+    all_matches.insert(all_matches.end(), path_matches.begin(), path_matches.end());
+    std::sort(all_matches.begin(), all_matches.end());
+    all_matches.erase(
+        std::unique(all_matches.begin(), all_matches.end()),
+        all_matches.end());
+
+    if (all_matches.size() == 1) {
+        std::string suffix = all_matches[0].substr(buffer.size());
         buffer += suffix;
         std::cout << suffix;
         buffer += ' '; //trailing space after autocomplete
         std::cout << ' ';
         std::cout.flush();
-    } else if (!matches.empty()) {
+    } else if (!all_matches.empty()) {
         std::cout << "\n";
-        for (auto& m : matches) std::cout << m << "  "; //list matches
+        for (auto& m : all_matches) std::cout << m << "  "; //list inbuilt_matches
         std::cout << "\n$ " << buffer;
         std::cout.flush();
-    } else if (matches.empty()) {
-        // No matches, ring bell
+    } else if (all_matches.empty()) {
+        // No all_matches, ring bell
         buffer += '\a';
         std::cout << '\a';
         std::cout.flush();

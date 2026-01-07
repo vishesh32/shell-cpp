@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <termios.h>
 #include "builtins.hpp"
+#include "path.hpp"
+#include <algorithm>
 
 class LineEditor {
 public:
