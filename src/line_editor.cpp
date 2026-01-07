@@ -95,17 +95,10 @@ void LineEditor::handleAutocomplete(std::string &buffer) {
     // Handle tab 
     if (last_autocomplete_matches.size() > 1) {
         if (!tabWasLastPress) {
-            // First tab autocompletes with current match from cycle
-            std::string match = last_autocomplete_matches[autocomplete_index];
-            autocomplete_index = (autocomplete_index + 1) % last_autocomplete_matches.size();
-            
-            std::string suffix = match.substr(buffer.size());
-            buffer += suffix;
-            std::cout << suffix;
+            // First tab rings bell (ambiguous matches)
+            std::cout << '\a';
             std::cout.flush();
-            
-            //codecrafter test case wants to revert the double tab behavior, only autocompleting on the first tab
-            //tabWasLastPress = true;
+            tabWasLastPress = true;
             return;
         }
         // Second tab lists matches
