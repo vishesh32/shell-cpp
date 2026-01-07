@@ -60,7 +60,7 @@ void LineEditor::handleAutocomplete(std::string &buffer) {
     if (buffer.find(' ') != std::string::npos) return;
 
     // Check cache
-    if (buffer == last_autocomplete_buffer && !last_autocomplete_matches.empty()) {
+    if (buffer == last_autocomplete_buffer) {
         // use cached matches
     } else {
         last_autocomplete_buffer = buffer;
@@ -91,7 +91,6 @@ void LineEditor::handleAutocomplete(std::string &buffer) {
     if (last_autocomplete_matches.size() > 1) {
         if (!tabWasLastPress) {
             // First tab rings bell
-            buffer += '\a';
             std::cout << '\a';
             std::cout.flush();
             tabWasLastPress = true;
@@ -114,7 +113,6 @@ void LineEditor::handleAutocomplete(std::string &buffer) {
         tabWasLastPress = false;
     } else {
         // No matches rings bell
-        buffer += '\a';
         std::cout << '\a';
         std::cout.flush();
         tabWasLastPress = false;
