@@ -94,13 +94,35 @@ void LineEditor::handleAutocomplete(std::string &buffer) {
 
     // Handle tab 
     if (last_autocomplete_matches.size() > 1) {
+        // Calculate longest common prefix
+        std::string lcp = last_autocomplete_matches[0];
+        for (size_t i = 1; i < last_autocomplete_matches.size(); i++) {
+            size_t j = 0;
+            while (j < lcp.size() && j < last_autocomplete_matches[i].size() 
+                   && lcp[j] == last_autocomplete_matches[i][j]) {
+                j++;
+            }
+            lcp = lcp.substr(0, j);
+        }
+        
+        // If LCP is longer than buffer, complete to LCP
+        if (lcp.size() > buffer.size()) {
+            std::string suffix = lcp.substr(buffer.size());
+            buffer += suffix;
+            std::cout << suffix;
+            std::cout.flush();
+            tabWasLastPress = false;
+            return;
+        }
+        
+        // Otherwise ambiguous - ring bell on first tab
         if (!tabWasLastPress) {
-            // First tab rings bell (ambiguous matches)
             std::cout << '\a';
             std::cout.flush();
             tabWasLastPress = true;
             return;
         }
+        
         // Second tab lists matches
         std::cout << "\n";
         for (const auto &m : last_autocomplete_matches) std::cout << m << "  ";
